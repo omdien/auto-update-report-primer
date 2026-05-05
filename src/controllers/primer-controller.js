@@ -61,6 +61,7 @@ export const exportExcelRincian = async (req, res) => {
             { header: 'ID Izin', key: 'id_izin', width: 15 },
             { header: 'Jenis Izin', key: 'jenis_izin', width: 10 },
             { header: 'Kd Izin', key: 'kd_izin', width: 15 },
+            { header: 'Uraian Izin', key: 'ur_izin_singkat', width: 20 },
             { header: 'Kd Daerah', key: 'kd_daerah', width: 12 },
             { header: 'Nama Izin', key: 'nama_izin', width: 30 },
             { header: 'No Izin', key: 'no_izin', width: 25 },
@@ -70,7 +71,7 @@ export const exportExcelRincian = async (req, res) => {
             { header: 'Sts Aktif', key: 'sts_aktif', width: 10 },
             { header: 'Komoditas', key: 'komoditas', width: 20 },
             { header: 'No Ref Teknis', key: 'no_referensi', width: 20 },
-            // { header: 'Provinsi', key: 'provinsi', width: 20 }, // Field tambahan jika ada di mapping
+            { header: 'Provinsi', key: 'provinsi', width: 20 }, 
             { header: 'KBLI', key: 'kbli', width: 10 },
             { header: 'Uraian Usaha', key: 'uraian_usaha', width: 30 },
             { header: 'NPWP Perseroan', key: 'npwp_perseroan', width: 20 },
@@ -98,6 +99,7 @@ export const exportExcelRincian = async (req, res) => {
                 id_izin: item.id_izin,
                 jenis_izin: item.jenis_izin,
                 kd_izin: item.kd_izin,
+                ur_izin_singkat: item.ur_izin_singkat,
                 kd_daerah: item.kd_daerah,
                 nama_izin: item.nama_izin,
                 no_izin: item.no_izin,
@@ -107,7 +109,7 @@ export const exportExcelRincian = async (req, res) => {
                 sts_aktif: item.sts_aktif,
                 komoditas: item.komoditas,
                 no_referensi: item.no_referensi,
-                provinsi: item.uraian_propinsi, // Anda bisa menambahkan logic provinsi di service jika perlu
+                provinsi: item.provinsi,
                 kbli: item.kbli,
                 uraian_usaha: item.uraian_usaha,
                 npwp_perseroan: item.npwp_perseroan,

@@ -23,7 +23,7 @@ export const getExportRincianService = async (filters) => {
         const kodePrefix = item.kd_daerah ? item.kd_daerah.substring(0, 2) : "";
 
         return {
-             idchecklist: item.idchecklist,
+            idchecklist: item.idchecklist,
             tgl_izin: item.tgl_izin,
             id_izin: item.id_izin,
             jenis_izin: item.jenis_izin,
@@ -37,8 +37,12 @@ export const getExportRincianService = async (filters) => {
             status_checklist: item.status_checklist,
             sts_aktif: item.sts_aktif,
 
+            // Data Lampiran (Komoditas)
+            komoditas: item.tr_pbumku_laporan_lampiran?.komoditas || "-",
+            no_referensi: item.tr_pbumku_laporan_lampiran?.nomor_referensi_teknis || "-",
+
             // Ambil dari Map hasil pivot
-            provinsi: propinsiMap[kodePrefix] || "-",
+            provinsi: propinsiMap[kodePrefix] || "Unknown",
 
             // Data Proyek
             kbli: item.v_oss_proyek?.kbli || "-",
@@ -54,10 +58,6 @@ export const getExportRincianService = async (filters) => {
             kode_pos_perseroan: item.v_oss_header?.kode_pos_perseroan || "-",
             nomor_telpon_perseroan: item.v_oss_header?.nomor_telpon_perseroan || "-",
             email_perusahaan: item.v_oss_header?.email_perusahaan || "-",
-
-            // Data Lampiran (Komoditas)
-            komoditas: item.tr_pbumku_laporan_lampiran?.komoditas || "-",
-            no_referensi: item.tr_pbumku_laporan_lampiran?.nomor_referensi_teknis || "-",
 
             // Hasil Penilaian (Sesuai Debug Log Anda)
             total_sesuai: fileData?.total_sesuai ?? "0",
