@@ -1,12 +1,12 @@
 import Sequelize from "sequelize";
-import Tr_oss_checklist from "../models/tr_oss_checklist.js";
-import V_oss_header from "../models/v_oss_header.js";
-import Tr_pbumku_laporan_header from "../models/tr_pbumku_laporan_header.js";
-import Tr_pbumku_laporan_file from "../models/tr_pbumku_laporan_file.js";
-import Tr_pbumku_laporan_lampiran from "../models/tr_pbumku_laporan_lampiran.js";
-import Tr_oss_proyek from "../models/tr_oss_proyek.js";
-import Tb_propinsi from "../models/tb_propinsi.js"; 
-import Tb_perizinan from "../models/tb_perizinan.js"; 
+import Tr_oss_checklist from "../models/mutu/tr_oss_checklist.js";
+import V_oss_header from "../models/mutu/v_oss_header.js";
+import Tr_pbumku_laporan_header from "../models/mutu/tr_pbumku_laporan_header.js";
+import Tr_pbumku_laporan_file from "../models/mutu/tr_pbumku_laporan_file.js";
+import Tr_pbumku_laporan_lampiran from "../models/mutu/tr_pbumku_laporan_lampiran.js";
+import Tr_oss_proyek from "../models/mutu/tr_oss_proyek.js";
+import Tb_propinsi from "../models/hc/tb_propinsi.js"; 
+import Tb_perizinan from "../models/mutu/tb_perizinan.js"; 
 
 export const fetchAllReportPrimerData = async (filters) => {
     const Op = Sequelize.Op;

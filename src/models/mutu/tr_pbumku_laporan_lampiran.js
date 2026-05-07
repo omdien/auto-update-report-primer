@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import { db_mutu } from "../config/database.js";
+import { db_mutu } from "../../config/database.js";
 import e from "express";
 // import Tr_pbumku_laporan_file from "./tr_pbumku_laporan_file.js";
 

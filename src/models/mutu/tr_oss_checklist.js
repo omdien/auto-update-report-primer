@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
-import { db_mutu } from "../config/database.js";
-import Tb_propinsi from "./tb_propinsi.js";
+import { db_mutu } from "../../config/database.js";
+import Tb_propinsi from "../hc/tb_propinsi.js";
 import V_oss_header from "./v_oss_header.js";
 import Tr_pbumku_laporan_header from "./tr_pbumku_laporan_header.js";
 import Tr_pbumku_laporan_lampiran from "./tr_pbumku_laporan_lampiran.js";

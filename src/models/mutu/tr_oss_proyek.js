@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import { db_mutu } from "../config/database.js";
+import { db_mutu } from "../../config/database.js";
 import Tb_skala_usaha_skp from "./tb_skala_usaha_skp.js";
 
 const { DataTypes } = Sequelize;

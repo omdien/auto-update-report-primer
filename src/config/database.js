@@ -12,3 +12,8 @@ export const db_hc = new Sequelize(process.env.DB_NAME_MUTU_HC, process.env.DB_U
     host: process.env.DB_HOST_MUTU_HC,
     dialect: 'mysql'
 });
+
+export const db_kapal = new Sequelize(process.env.DB_NAME_MUTU_KAPAL, process.env.DB_USER_MUTU_KAPAL, process.env.DB_PASS_MUTU_KAPAL, {
+    host: process.env.DB_HOST_MUTU_KAPAL,
+    dialect: 'mysql'
+});
