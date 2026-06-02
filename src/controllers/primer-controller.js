@@ -71,7 +71,7 @@ export const exportExcelRincian = async (req, res) => {
             { header: 'Sts Aktif', key: 'sts_aktif', width: 10 },
             { header: 'Komoditas', key: 'komoditas', width: 20 },
             { header: 'No Ref Teknis', key: 'no_referensi', width: 20 },
-            { header: 'Provinsi', key: 'provinsi', width: 20 }, 
+            { header: 'Provinsi', key: 'provinsi', width: 20 },
             { header: 'KBLI', key: 'kbli', width: 10 },
             { header: 'Uraian Usaha', key: 'uraian_usaha', width: 30 },
             { header: 'NPWP Perseroan', key: 'npwp_perseroan', width: 20 },
@@ -151,5 +151,42 @@ export const exportExcelRincian = async (req, res) => {
     } catch (error) {
         console.error("Error Export Excel:", error.message);
         res.status(500).json({ status: "error", message: error.message });
+    }
+};
+
+/**
+ * POST /api/primer/sync-export
+ * Trigger manual sinkronisasi data ke tr_laporan_primer_export
+ * Query: ?tgl_awal=2026-01-01&tgl_akhir=2026-04-17
+ */
+export const syncExportRincian = async (req, res) => {
+    try {
+        const { tgl_awal, tgl_akhir } = req.query;
+
+        if (!tgl_awal || !tgl_akhir) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Parameter tgl_awal dan tgl_akhir wajib diisi."
+            });
+        }
+
+        console.log(`[SYNC] Mulai sinkronisasi: ${tgl_awal} s/d ${tgl_akhir}`);
+
+        const result = await primerService.syncExportRincianService({ tgl_awal, tgl_akhir });
+
+        console.log(`[SYNC] Selesai:`, result);
+
+        return res.status(200).json({
+            status: "success",
+            message: "Sinkronisasi data berhasil.",
+            ...result
+        });
+
+    } catch (error) {
+        console.error("[SYNC] Error:", error.message);
+        return res.status(500).json({
+            status: "error",
+            message: "Terjadi kesalahan saat sinkronisasi data."
+        });
     }
 };

@@ -5,8 +5,10 @@ import Tr_pbumku_laporan_header from "../models/mutu/tr_pbumku_laporan_header.js
 import Tr_pbumku_laporan_file from "../models/mutu/tr_pbumku_laporan_file.js";
 import Tr_pbumku_laporan_lampiran from "../models/mutu/tr_pbumku_laporan_lampiran.js";
 import Tr_oss_proyek from "../models/mutu/tr_oss_proyek.js";
-import Tb_propinsi from "../models/hc/tb_propinsi.js"; 
-import Tb_perizinan from "../models/mutu/tb_perizinan.js"; 
+import Tb_propinsi from "../models/hc/tb_propinsi.js";
+import Tb_perizinan from "../models/mutu/tb_perizinan.js";
+
+import TrLaporanPrimerExport from "../models/report/tr_laporan_primer_export.js";
 
 export const fetchAllReportPrimerData = async (filters) => {
     const Op = Sequelize.Op;
@@ -67,4 +69,28 @@ export const fetchAllPropinsi = async () => {
         attributes: ['KODE_PROPINSI', 'URAIAN_PROPINSI'],
         raw: true
     });
+};
+
+// Ambil semua idchecklist yang sudah ada di tr_laporan_primer_export
+export const fetchExistingIdChecklist = async () => {
+    const results = await TrLaporanPrimerExport.findAll({
+        attributes: ['idchecklist'],
+        raw: true
+    });
+
+    // Return sebagai Set untuk pencarian O(1)
+    return new Set(results.map(r => r.idchecklist));
+};
+
+// Bulk insert data baru ke tr_laporan_primer_export
+export const bulkInsertExportData = async (rows) => {
+    if (!rows || rows.length === 0) {
+        return { inserted: 0 };
+    }
+
+    await TrLaporanPrimerExport.bulkCreate(rows, {
+        ignoreDuplicates: true  // safety net jika ada race condition
+    });
+
+    return { inserted: rows.length };
 };

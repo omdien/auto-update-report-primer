@@ -17,3 +17,8 @@ export const db_kapal = new Sequelize(process.env.DB_NAME_MUTU_KAPAL, process.en
     host: process.env.DB_HOST_MUTU_KAPAL,
     dialect: 'mysql'
 });
+
+export const db_report_primer = new Sequelize(process.env.DB_NAME_REPORT_PRIMER, process.env.DB_USER_REPORT_PRIMER, process.env.DB_PASS_REPORT_PRIMER, {
+    host: process.env.DB_HOST_REPORT_PRIMER,
+    dialect: 'mysql'
+});
