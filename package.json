@@ -19,6 +19,7 @@
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "mysql2": "^3.22.1",
+    "node-cron": "^4.2.1",
     "sequelize": "^6.37.8",
     "sequelize-auto": "^0.8.8"
   },
