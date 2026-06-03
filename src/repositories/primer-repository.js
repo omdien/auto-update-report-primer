@@ -79,18 +79,21 @@ export const fetchExistingIdChecklist = async () => {
     });
 
     // Return sebagai Set untuk pencarian O(1)
-    return new Set(results.map(r => r.idchecklist));
+    // Paksa semua jadi string agar === konsisten dengan data dari checklist yang juga string
+    return new Set(rows.map(r => String(r.idchecklist)));
 };
 
 // Bulk insert data baru ke tr_laporan_primer_export
 export const bulkInsertExportData = async (rows) => {
-    if (!rows || rows.length === 0) {
-        return { inserted: 0 };
-    }
+    if (!rows.length) return { inserted: 0, skipped: 0 };
 
-    await TrLaporanPrimerExport.bulkCreate(rows, {
-        ignoreDuplicates: true  // safety net jika ada race condition
+    const result = await TrLaporanPrimerExport.bulkCreate(rows, {
+        ignoreDuplicates: true,  // ← skip row yang idchecklist-nya sudah ada
+        returning: false
     });
 
-    return { inserted: rows.length };
+    return {
+        inserted: result.length,
+        skipped:  rows.length - result.length  // selisih = yang di-skip DB
+    };
 };

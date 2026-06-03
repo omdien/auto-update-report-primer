@@ -78,11 +78,11 @@ export const getExportRincianService = async (filters) => {
  * @returns {Object} { total_fetched, total_skipped, total_inserted }
  */
 export const syncExportRincianService = async (filters) => {
-    // 1. Tarik data sumber + propinsi + existing IDs secara paralel
-    const [rows, propinsiList, existingIds] = await Promise.all([
+    // 1. Tarik data sumber + propinsi secara paralel
+    // existingIds tidak perlu lagi — DB yang handle via ignoreDuplicates
+    const [rows, propinsiList] = await Promise.all([
         reportRepository.fetchAllReportPrimerData(filters),
-        reportRepository.fetchAllPropinsi(),
-        reportRepository.fetchExistingIdChecklist()
+        reportRepository.fetchAllPropinsi()
     ]);
 
     // 2. Pivot propinsi map
@@ -91,23 +91,13 @@ export const syncExportRincianService = async (filters) => {
         return acc;
     }, {});
 
-    // 3. Map & filter — hanya data yang belum ada
-    const newRows = [];
-    const skippedIds = [];
-
-    for (const row of rows) {
+    // 3. Map semua rows — tanpa filter manual
+    const mappedRows = rows.map(row => {
         const item = row.get({ plain: true });
-
-        // Skip jika idchecklist sudah ada
-        if (existingIds.has(item.idchecklist)) {
-            skippedIds.push(item.idchecklist);
-            continue;
-        }
-
         const fileData = item.tb_pbumku_laporan_header?.tb_pbumku_laporan_file;
         const kodePrefix = item.kd_daerah ? item.kd_daerah.substring(0, 2) : "";
 
-        newRows.push({
+        return {
             idchecklist: item.idchecklist,
             tgl_izin: item.tgl_izin,
             id_izin: item.id_izin,
@@ -123,7 +113,7 @@ export const syncExportRincianService = async (filters) => {
             sts_aktif: item.sts_aktif,
             komoditas: item.tr_pbumku_laporan_lampiran?.komoditas || "-",
             no_referensi: item.tr_pbumku_laporan_lampiran?.nomor_referensi_teknis || "-",
-            uraian_propinsi: propinsiMap[kodePrefix] || "Unknown", // ⚠️ field di tabel: uraian_propinsi (bukan provinsi)
+            uraian_propinsi: propinsiMap[kodePrefix] || "Unknown",
             kbli: item.v_oss_proyek?.kbli || "-",
             uraian_usaha: item.v_oss_proyek?.uraian_usaha || "-",
             npwp_perseroan: item.v_oss_header?.npwp_perseroan || "-",
@@ -142,16 +132,15 @@ export const syncExportRincianService = async (filters) => {
             total_hasil: fileData?.total_hasil ?? "-",
             keterangan: fileData?.keterangan || "-",
             sumber_data: "SISTEM",
-            // tgl_tarik_data otomatis terisi current_timestamp dari DB
-        });
-    }
+        };
+    });
 
-    // 4. Bulk insert data baru
-    const { inserted } = await reportRepository.bulkInsertExportData(newRows);
+    // 4. Bulk insert — DB skip otomatis jika idchecklist sudah ada (ignoreDuplicates)
+    const { inserted, skipped } = await reportRepository.bulkInsertExportData(mappedRows);
 
     return {
         total_fetched: rows.length,
-        total_skipped: skippedIds.length,
+        total_skipped: skipped,
         total_inserted: inserted
     };
 };
