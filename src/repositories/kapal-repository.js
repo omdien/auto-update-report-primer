@@ -1,34 +1,35 @@
-import { 
-    Tr_sertifikat_kapal, 
-    Tr_ppm_kapal, 
-    Tb_pelabuhan_pendaratan, 
-    Tb_jenis_ijin, 
+import {
+    Tr_sertifikat_kapal,
+    Tr_ppm_kapal,
+    Tb_pelabuhan_pendaratan,
+    Tb_jenis_ijin,
     Tr_kapal_spt,
     Tb_propinsi,
     Tb_r_upt,
     Tb_master_kapal,
     Tr_inspeksi_teknis_evalusi
 } from "../models/index.js";
+import Tb_cbib_kapal from "../models/report/tb_cpib_kapal.js"; // ← tambahkan ini
 import Sequelize from "sequelize";
 
 export const fetchSertifikatKapalRaw = async (filters) => {
     const Op = Sequelize.Op;
-    const where = filters.tgl_awal && filters.tgl_akhir 
-        ? { tanggal_terbit: { [Op.between]: [filters.tgl_awal, filters.tgl_akhir] } } 
+    const where = filters.tgl_awal && filters.tgl_akhir
+        ? { tanggal_terbit: { [Op.between]: [filters.tgl_awal, filters.tgl_akhir] } }
         : {};
 
     return await Tr_sertifikat_kapal.findAll({
         where,
         attributes: [
             ['nomor_sertifikat', 'no_cbib'],
-            'nama_kapal', 
-            'alamat_pemilik', 
-            'ukuran_kapal', 
-            'grade', 
-            'tanggal_terbit', 
-            'berlaku_sampai', 
-            'tanggal_inspeksi', 
-            'nomor_aju_kapal', 
+            'nama_kapal',
+            'alamat_pemilik',
+            'ukuran_kapal',
+            'grade',
+            'tanggal_terbit',
+            'berlaku_sampai',
+            'tanggal_inspeksi',
+            'nomor_aju_kapal',
             'jenis_kapal',
             // --- CARA 1: SUBQUERY UNTUK MENGGABUNGKAN PRODUK ---
             [
@@ -37,7 +38,7 @@ export const fetchSertifikatKapalRaw = async (filters) => {
                     FROM kapal.tr_sertifikat_kapal_produk AS tskp
                     JOIN kapal.tb_jenis_komoditi AS tjk ON tskp.id_komoditi = tjk.id_jenis_komoditi
                     WHERE tskp.nomor_aju_kapal = Tr_sertifikat_kapal.nomor_aju_kapal
-                )`), 
+                )`),
                 'jenis_produk'
             ],
             // --------------------------------------------------
@@ -47,32 +48,32 @@ export const fetchSertifikatKapalRaw = async (filters) => {
                 model: Tr_ppm_kapal,
                 as: 'tr_ppm_kapal',
                 attributes: [
-                    'nib', 'tanggal_aju_kapal', 'nama_nahkoda', 'jumlah_abk', 
-                    'alat_tangkap', 'daerah_tangkap', 'nomor_bkp', 
-                    'tanggal_rencana_bongkar_kapal', 'kd_prop', 'kode_upt', 
+                    'nib', 'tanggal_aju_kapal', 'nama_nahkoda', 'jumlah_abk',
+                    'alat_tangkap', 'daerah_tangkap', 'nomor_bkp',
+                    'tanggal_rencana_bongkar_kapal', 'kd_prop', 'kode_upt',
                     'tempat_pendaratan'
                 ],
                 include: [
-                    { 
-                        model: Tb_pelabuhan_pendaratan, 
-                        as: 'tb_pelabuhan_pendaratan', 
-                        attributes: ['nama_pelabuhan'] 
+                    {
+                        model: Tb_pelabuhan_pendaratan,
+                        as: 'tb_pelabuhan_pendaratan',
+                        attributes: ['nama_pelabuhan']
                     },
-                    { 
-                        model: Tb_master_kapal, 
-                        as: 'tb_master_kapal', 
-                        attributes: ['pemilik', 'telp_pemilik'] 
+                    {
+                        model: Tb_master_kapal,
+                        as: 'tb_master_kapal',
+                        attributes: ['pemilik', 'telp_pemilik']
                     }
                 ]
             },
             { model: Tb_jenis_ijin, as: 'tb_jenis_ijin', attributes: ['uraian_ijin'] },
-            { 
-                model: Tr_kapal_spt, 
-                as: 'tr_kapal_spt', 
+            {
+                model: Tr_kapal_spt,
+                as: 'tr_kapal_spt',
                 attributes: ['tanggal_spt', 'nomor_spt'], // Tambahkan no_spt jika perlu dicek
                 where: {
                     // Mengambil yang nomor SPT-nya tidak null DAN tidak kosong
-                    nomor_spt: { 
+                    nomor_spt: {
                         [Op.and]: [
                             { [Op.ne]: null },
                             { [Op.ne]: '' }
@@ -98,4 +99,31 @@ export const fetchRefHC = async () => {
         Tb_r_upt.findAll({ raw: true })
     ]);
     return { propinsi, upt };
+};
+
+export const bulkInsertCpibKapal = async (rows) => {
+    if (!rows.length) return { inserted: 0, skipped: 0 };
+
+    // 1. Ambil semua no_cbib yang sudah ada di DB
+    const existing = await Tb_cbib_kapal.findAll({
+        attributes: ["no_cbib"],
+        raw: true,
+    });
+    const existingSet = new Set(existing.map(r => String(r.no_cbib)));
+
+    // 2. Pisahkan: mana yang baru, mana yang duplikat
+    const newRows = rows.filter(r => !existingSet.has(String(r.no_cbib)));
+    const skipped = rows.length - newRows.length;
+
+    // 3. Insert hanya yang baru
+    if (newRows.length > 0) {
+        await Tb_cbib_kapal.bulkCreate(newRows, {
+            ignoreDuplicates: true, // tetap ada sebagai safety net
+        });
+    }
+
+    return {
+        inserted: newRows.length,
+        skipped,
+    };
 };

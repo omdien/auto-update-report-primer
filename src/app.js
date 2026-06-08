@@ -2,11 +2,13 @@ import express from 'express';
 import xprPrimerRoutes from "./routes/primer-routes.js";
 import kapalRoutes from "./routes/kapal-routes.js";
 import { registerPrimerScheduler } from './scheduler/primer-scheduler.js';
+import { initKapalScheduler } from './scheduler/kapal-scheduler.js';
 
 const app = express();
 
 app.use(express.json());
-registerPrimerScheduler(); // Daftarkan scheduler saat aplikasi mulai
+registerPrimerScheduler(); 
+initKapalScheduler(); 
 
 app.get("/test-koneksi", (req, res) => res.send("Pintu Utama Terbuka!"));
 
