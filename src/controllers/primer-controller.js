@@ -1,12 +1,16 @@
 import ExcelJS from 'exceljs';
 import * as primerService from "../services/primer-service.js";
 
+/**
+ * Controller Endpoint: GET /api/primer/rincian
+ * Mengambil data rincian laporan primer dalam format JSON murni berdasarkan rentang tanggal.
+ */
 export const getExportRincian = async (req, res) => {
     try {
-        // 1. Ambil filter dari query string (misal: ?tgl_awal=2026-01-01&tgl_akhir=2026-04-17)
+        // 1. Ambil filter dari query string (contoh: ?tgl_awal=2026-01-01&tgl_akhir=2026-04-17)
         const { tgl_awal, tgl_akhir } = req.query;
 
-        // Validasi sederhana jika tanggal tidak dikirim
+        // Validasi wajib: Batalkan proses jika parameter rentang tanggal tidak lengkap dikirim oleh client
         if (!tgl_awal || !tgl_akhir) {
             return res.status(400).json({
                 status: "fail",
@@ -16,10 +20,10 @@ export const getExportRincian = async (req, res) => {
 
         const filters = { tgl_awal, tgl_akhir };
 
-        // 2. Panggil Service yang sudah kita tes tadi
+        // 2. Panggil Service terkait untuk menarik dan memproses data dari layer database/repository
         const data = await primerService.getExportRincianService(filters);
 
-        // 3. Kirim response sukses
+        // 3. Kirim kembali response sukses berformat JSON beserta total datanya
         return res.status(200).json({
             status: "success",
             message: "Data rincian laporan primer berhasil ditarik",
@@ -28,8 +32,8 @@ export const getExportRincian = async (req, res) => {
         });
 
     } catch (error) {
-        // 4. Handling jika terjadi error
-        console.error("Error pada primer-controller:", error.message);
+        // 4. Tangkap dan log error sistem yang terjadi di layer bawah
+        console.error("Error pada primer-controller (getExportRincian):", error.message);
         return res.status(500).json({
             status: "error",
             message: "Terjadi kesalahan pada server saat mengambil data."
@@ -37,10 +41,15 @@ export const getExportRincian = async (req, res) => {
     }
 };
 
+/**
+ * Controller Endpoint: GET /api/primer/export-excel
+ * Mengunduh laporan rincian langsung dalam bentuk file dokumen Excel (.xlsx) menggunakan pustaka ExcelJS.
+ */
 export const exportExcelRincian = async (req, res) => {
     try {
         const { tgl_awal, tgl_akhir } = req.query;
 
+        // Validasi parameter wajib tanggal awal dan akhir
         if (!tgl_awal || !tgl_akhir) {
             return res.status(400).json({
                 status: "fail",
@@ -49,12 +58,14 @@ export const exportExcelRincian = async (req, res) => {
         }
 
         const filters = { tgl_awal, tgl_akhir };
+        // Tarik data matang dari service
         const data = await primerService.getExportRincianService(filters);
 
+        // Inisialisasi Workbook dan Worksheet baru via ExcelJS
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Laporan Rincian');
 
-        // 1. Definisi Kolom Sesuai Urutan Gambar Referensi
+        // 1. Definisi Struktur Kolom (Header, Key penanda data, serta lebar kolom / width)
         worksheet.columns = [
             { header: 'ID Checklist', key: 'idchecklist', width: 12 },
             { header: 'Tgl Izin', key: 'tgl_izin', width: 12 },
@@ -91,7 +102,7 @@ export const exportExcelRincian = async (req, res) => {
             { header: 'Keterangan', key: 'keterangan', width: 25 },
         ];
 
-        // 2. Mapping Data ke Row
+        // 2. Looping data array objek untuk dimasukkan sebagai baris baru ke dalam worksheet
         data.forEach((item) => {
             worksheet.addRow({
                 idchecklist: item.idchecklist,
@@ -130,21 +141,22 @@ export const exportExcelRincian = async (req, res) => {
             });
         });
 
-        // 3. Styling Header
+        // 3. Kustomisasi Styling Baris Header (Baris Pertama)
         const headerRow = worksheet.getRow(1);
-        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }; // Teks putih tebal
         headerRow.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FF1F4E78' } // Warna biru gelap seperti gambar
+            fgColor: { argb: 'FF1F4E78' } // Warna latar belakang biru gelap profesional
         };
-        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' }; // Posisi teks di tengah
 
-        // 4. Response Settings
+        // 4. Konfigurasi Header HTTP Response untuk pengunduhan file Excel
         const fileName = `Export_Rincian_${tgl_awal}_${tgl_akhir}.xlsx`;
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
 
+        // Tulis workbook langsung ke objek response HTTP (stream) dan akhiri koneksi
         await workbook.xlsx.write(res);
         res.status(200).end();
 
@@ -155,14 +167,15 @@ export const exportExcelRincian = async (req, res) => {
 };
 
 /**
- * POST /api/primer/sync-export
- * Trigger manual sinkronisasi data ke tr_laporan_primer_export
- * Query: ?tgl_awal=2026-01-01&tgl_akhir=2026-04-17
+ * Controller Endpoint: POST /api/primer/sync-export
+ * Trigger manual untuk menjalankan proses sinkronisasi data ke tabel tujuan (`tr_laporan_primer_export`).
+ * Membutuhkan query parameter `tgl_awal` dan `tgl_akhir`.
  */
 export const syncExportRincian = async (req, res) => {
     try {
         const { tgl_awal, tgl_akhir } = req.query;
 
+        // Validasi parameter tanggal wajib untuk proses sinkronisasi
         if (!tgl_awal || !tgl_akhir) {
             return res.status(400).json({
                 status: "fail",
@@ -170,11 +183,12 @@ export const syncExportRincian = async (req, res) => {
             });
         }
 
-        console.log(`[SYNC] Mulai sinkronisasi: ${tgl_awal} s/d ${tgl_akhir}`);
+        console.log(`[SYNC] Mulai sinkronisasi rentang waktu: ${tgl_awal} s/d ${tgl_akhir}`);
 
+        // Panggil service sinkronisasi utama
         const result = await primerService.syncExportRincianService({ tgl_awal, tgl_akhir });
 
-        console.log(`[SYNC] Selesai:`, result);
+        console.log(`[SYNC] Selesai dengan laporan statistik:`, result);
 
         return res.status(200).json({
             status: "success",
@@ -183,7 +197,7 @@ export const syncExportRincian = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("[SYNC] Error:", error.message);
+        console.error("[SYNC] Error sistem terjadi:", error.message);
         return res.status(500).json({
             status: "error",
             message: "Terjadi kesalahan saat sinkronisasi data."

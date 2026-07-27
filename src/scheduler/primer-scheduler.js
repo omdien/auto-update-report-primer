@@ -4,18 +4,20 @@ import cron from 'node-cron';
 import * as primerService from '../services/primer-service.js';
 
 /**
- * Hitung rentang tanggal: 30 hari ke belakang s/d hari ini
+ * Hitung rentang tanggal: 90 hari ke belakang s/d hari ini
  * Anda bisa sesuaikan rentang ini sesuai kebutuhan bisnis
  */
 const getDefaultFilters = () => {
     const today = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(today.getDate() - 30);
+    const pastDate = new Date();
+    
+    // Tarik mundur 90 hari (3 bulan) ke belakang dari hari ini
+    pastDate.setDate(today.getDate() - 90); 
 
     const fmt = (d) => d.toISOString().split('T')[0]; // format YYYY-MM-DD
 
     return {
-        tgl_awal: fmt(thirtyDaysAgo),
+        tgl_awal: fmt(pastDate),
         tgl_akhir: fmt(today)
     };
 };

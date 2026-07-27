@@ -38,8 +38,8 @@ const mapToModelRow = (item) => ({
     no_siup:            item.no_siup             || null,
     tgl_siup:           item.tgl_siup            || null,
     no_kbli:            item.no_kbli             || null,
-    no_skpp_bkp_nk:     item.no_skkp_bkp_nk     || null, // service=no_skkp → model=no_skpp
-    tgl_skpp_bkp_nk:    item.tgl_skkp_bkp_nk    || null, // service=tgl_skkp → model=tgl_skpp
+    no_skpp_bkp_nk:     item.no_skkp_bkp_nk      || null, // service=no_skkp → model=no_skpp
+    tgl_skpp_bkp_nk:    item.tgl_skkp_bkp_nk     || null, // service=tgl_skkp → model=tgl_skpp
     pj_pusat:           item.pj_pusat            || null,
 });
 
